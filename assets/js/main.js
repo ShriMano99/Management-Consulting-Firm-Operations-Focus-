@@ -1,0 +1,28 @@
+/* Shared navigation, preferences, filters, and integration-ready forms. */
+'use strict';
+const root=document.documentElement;
+const remember=(key,value)=>{try{localStorage.setItem(key,value)}catch(e){}};
+document.querySelector('#theme')?.addEventListener('click',()=>{root.dataset.theme=root.dataset.theme==='dark'?'light':'dark';remember('axiom-theme',root.dataset.theme)});
+matchMedia('(prefers-color-scheme: dark)').addEventListener('change',e=>{try{if(!localStorage.getItem('axiom-theme'))root.dataset.theme=e.matches?'dark':'light'}catch(err){}});
+document.querySelector('#direction')?.addEventListener('click',()=>{root.dir=root.dir==='rtl'?'ltr':'rtl';remember('axiom-dir',root.dir)});
+const menu=document.querySelector('#menu'),nav=document.querySelector('#navigation');
+menu?.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));nav.classList.toggle('open',open)});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&nav?.classList.contains('open')){nav.classList.remove('open');menu.setAttribute('aria-expanded','false');menu.focus()}});
+/* Filter case study cards and announce the result count. */
+document.querySelectorAll('[data-filter]').forEach(button=>button.addEventListener('click',()=>{document.querySelectorAll('[data-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b===button)));let count=0;document.querySelectorAll('[data-category]').forEach(card=>{card.hidden=button.dataset.filter!=='All'&&card.dataset.category!==button.dataset.filter;if(!card.hidden)count++});document.querySelector('#filter-status').textContent=`${count} case studies shown`;}));
+/* Validate before sending to an explicitly configured integration endpoint. */
+document.querySelectorAll('form[data-form]').forEach(form=>{const date=form.querySelector('[type=date]');if(date){const now=new Date();date.min=[now.getFullYear(),String(now.getMonth()+1).padStart(2,'0'),String(now.getDate()).padStart(2,'0')].join('-')}form.addEventListener('submit',async e=>{e.preventDefault();let first;form.querySelectorAll('input,select,textarea').forEach((input,i)=>{const error=input.closest('.field')?.querySelector('.error');if(!error)return;error.id=`${form.dataset.form}-error-${i}`;input.setAttribute('aria-describedby',error.id);const valid=input.checkValidity();input.setAttribute('aria-invalid',String(!valid));error.textContent=valid?'':input.validity.valueMissing?'Please complete this field.':input.validity.typeMismatch?'Please enter a valid email address.':input.validity.tooShort?'Please enter at least 10 characters.':input.validity.rangeUnderflow?'Please choose today or a future date.':'Please check this value.';if(!valid&&!first)first=input});if(first){first.focus();return}const status=form.querySelector('.status'),button=form.querySelector('[type=submit]'),original=button.innerHTML;button.disabled=true;button.innerHTML='<span class="spinner" aria-hidden="true"></span> Processing';form.setAttribute('aria-busy','true');try{if(form.dataset.endpoint){const response=await fetch(form.dataset.endpoint,{method:'POST',body:new FormData(form),headers:{Accept:'application/json'}});if(!response.ok)throw Error('Unable to submit. Please try again.');status.textContent='Thank you. Your request has been submitted.';form.reset()}else{await new Promise(resolve=>setTimeout(resolve,450));status.textContent=form.dataset.form==='contact'?'Enquiry submission is currently unavailable. Please contact us by email.':'Demo validated successfully. No data was sent. Connect your form provider to enable submissions.'}}catch(err){status.textContent='Unable to submit. Please try again or contact us by email.'}finally{button.disabled=false;button.innerHTML=original;form.removeAttribute('aria-busy')}})});
+/* Optional lazy media skeletons are removed on success and failure. */
+document.querySelectorAll('img[loading=lazy]').forEach(img=>{if(!img.complete){img.classList.add('skeleton');['load','error'].forEach(event=>img.addEventListener(event,()=>img.classList.remove('skeleton'),{once:true}))}});
+
+/* Toggle the Home choices on click, with keyboard and outside-click dismissal. */
+const homeDropdown=document.querySelector('.home-dropdown');
+const homeToggle=homeDropdown?.querySelector('.home-toggle');
+const homeOptions=homeDropdown?.querySelector('.home-options');
+const closeHome=()=>{if(homeToggle){homeToggle.setAttribute('aria-expanded','false');homeOptions.hidden=true;}};
+homeToggle?.addEventListener('click',()=>{const open=homeToggle.getAttribute('aria-expanded')!=='true';homeToggle.setAttribute('aria-expanded',String(open));homeOptions.hidden=!open;});
+homeToggle?.addEventListener('keydown',event=>{if(event.key==='ArrowDown'){event.preventDefault();homeToggle.setAttribute('aria-expanded','true');homeOptions.hidden=false;homeOptions.querySelector('a')?.focus();}});
+document.addEventListener('click',event=>{if(homeDropdown&&!homeDropdown.contains(event.target))closeHome();});
+document.addEventListener('keydown',event=>{if(event.key==='Escape'&&homeToggle?.getAttribute('aria-expanded')==='true'){closeHome();homeToggle.focus();}});
+homeDropdown?.addEventListener('focusout',event=>{if(!homeDropdown.contains(event.relatedTarget))closeHome();});
+

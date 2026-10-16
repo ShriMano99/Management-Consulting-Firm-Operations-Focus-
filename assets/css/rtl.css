@@ -1,0 +1,2 @@
+/* Logical properties preserve RTL spacing */
+[dir="rtl"] .photo-caption{left:auto;right:28px}[dir="rtl"] .photo-note{right:auto;left:0}[dir="rtl"] .arrow{transform:scaleX(-1)}[dir="rtl"] .service-card{padding:28px 0 8px 8px}[dir="rtl"] input[type=email]{direction:ltr;text-align:right}

@@ -1,0 +1,2 @@
+/* Theme overrides */
+[data-theme="dark"]{--bg:#171e1a;--surface:#242e27;--ink:#edf0e7;--muted:#bbc5bd;--accent:#e88a5c;--line:#414b43}[data-theme="dark"] .band{background:#242e27;color:#edf0e7}[data-theme="dark"] .btn{color:#171e1a}[data-theme="dark"] .btn:hover{background:#efa77f}[data-theme="dark"] .btn-outline{color:var(--ink)}
